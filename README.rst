@@ -1,3 +1,8 @@
+This project was forked to include
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- (backported): ability to set process title using `setproctitle` utility
+
 .. image:: docs/_static/logo.png
     :align: center
     :alt: Q logo
@@ -6,7 +11,7 @@
 A multiprocessing distributed task queue for Django
 ---------------------------------------------------
 
-|image0| |image1| |docs| |image2|
+|docs|
 
 Features
 ~~~~~~~~
