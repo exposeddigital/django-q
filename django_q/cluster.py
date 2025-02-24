@@ -38,6 +38,7 @@ from django_q.conf import (
     get_ppid,
     logger,
     psutil,
+    setproctitle,
     resource,
 )
 from django_q.humanhash import humanize
@@ -46,6 +47,8 @@ from django_q.queues import Queue
 from django_q.signals import pre_execute
 from django_q.signing import BadSignature, SignedPackage
 from django_q.status import Stat, Status
+
+from .utils import get_func_repr
 
 
 class Cluster:
@@ -62,6 +65,9 @@ class Cluster:
         signal.signal(signal.SIGINT, self.sig_handler)
 
     def start(self) -> int:
+        name = current_process().name
+        if setproctitle:
+            setproctitle.setproctitle(f"qcluster {name} {self.name}")
         # Start Sentinel
         self.stop_event = Event()
         self.start_event = Event()
@@ -339,6 +345,9 @@ def pusher(task_queue: Queue, event: Event, broker: Broker = None):
     """
     if not broker:
         broker = get_broker()
+    name = current_process().name
+    if setproctitle:
+        setproctitle.setproctitle(f"qcluster {name} pusher")
     logger.info(_(f"{current_process().name} pushing tasks at {current_process().pid}"))
     while True:
         try:
@@ -375,6 +384,8 @@ def monitor(result_queue: Queue, broker: Broker = None):
     if not broker:
         broker = get_broker()
     name = current_process().name
+    if setproctitle:
+        setproctitle.setproctitle(f"qcluster {name} monitor")
     logger.info(_(f"{name} monitoring at {current_process().pid}"))
     for task in iter(result_queue.get, "STOP"):
         # save the result
@@ -408,6 +419,8 @@ def worker(
     """
     name = current_process().name
     logger.info(_(f"{name} ready for work at {current_process().pid}"))
+    if setproctitle:
+        setproctitle.setproctitle(f"qcluster {name} idle")
     task_count = 0
     if timeout is None:
         timeout = -1
@@ -417,8 +430,16 @@ def worker(
         timer.value = -1  # Idle
         task_count += 1
         # Get the function from the task
-        logger.info(_(f'{name} processing [{task["name"]}]'))
+        task_name = task["name"]
+        logger.info(_(f'{name} processing [{task_name}]'))
         f = task["func"]
+        func_name = get_func_repr(f)
+        if setproctitle:
+            proc_title = f"qcluster {name} processing {task_name} '{func_name}'"
+            if "group" in task:
+                task_group = task['group']
+                proc_title += f" [{task_group}]"
+            setproctitle.setproctitle(proc_title)
         # if it's not an instance try to get it from the string
         if not callable(task["func"]):
             f = pydoc.locate(f)
@@ -444,6 +465,8 @@ def worker(
             task["stopped"] = timezone.now()
             result_queue.put(task)
             timer.value = -1  # Idle
+            if setproctitle:
+                setproctitle.setproctitle(f"qcluster {name} idle")
             # Recycle
             if task_count == Conf.RECYCLE or rss_check():
                 timer.value = -2  # Recycled
