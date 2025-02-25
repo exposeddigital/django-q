@@ -630,10 +630,18 @@ def scheduler(broker: Broker = None):
                         )
                         kwargs = {}
                 if s.args:
-                    args = ast.literal_eval(s.args)
-                    # single value won't eval to tuple, so:
-                    if type(args) != tuple:
-                        args = (args,)
+                    try:
+                        args = ast.literal_eval(s.args)
+                        # single value won't eval to tuple, so:
+                        if isinstance(args, tuple):
+                            args = (args,)
+                    except (SyntaxError, ValueError):
+                        logger.error(
+                            _(
+                                f"{proc_name} failed to parse task arguments, won't schedule [{s.name or s.id}]"
+                            )
+                        )
+                        continue
                 q_options = kwargs.get("q_options", {})
                 if s.hook:
                     q_options["hook"] = s.hook
