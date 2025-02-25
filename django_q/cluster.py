@@ -602,6 +602,7 @@ def scheduler(broker: Broker = None):
     """
     if not broker:
         broker = get_broker()
+    proc_name = current_process().name
     close_old_django_connections()
     try:
         database_to_use = {"using": Conf.ORM} if not Conf.HAS_REPLICA else {}
@@ -622,6 +623,11 @@ def scheduler(broker: Broker = None):
                         # eval should be safe here because dict()
                         kwargs = eval(f"dict({s.kwargs})")
                     except SyntaxError:
+                        logger.warning(
+                            _(
+                                f"{proc_name} failed to parse `kwargs`, won't account them [{s.name or s.id}]"
+                            )
+                        )
                         kwargs = {}
                 if s.args:
                     args = ast.literal_eval(s.args)
