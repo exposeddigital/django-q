@@ -1,3 +1,7 @@
+[tool.setuptools.packages.find]
+include = ["django_q"]
+exclude = ["venv39", "tests", "docs"]
+
 [tool.poetry]
 name = "django-q"
 version = "1.3.8"
@@ -67,9 +71,13 @@ pytest-cov = "^2.12.0"
 black = { version = "^21.5b1", allow-prereleases = true }
 isort = {extras = ["requirements_deprecated_finder"], version = "^5.8.0"}
 
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.poetry.extras]
-requires = ["poetry_core>=1.0.0"]
-build-backend = ["poetry.core.masonry.api"]
+# requires = ["poetry_core>=1.0.0"]
+# build-backend = ["poetry.core.masonry.api"]
 testing = ["django-redis", "croniter", "hiredis", "psutil", "iron-mq", "boto3", "pymongo"]
 rollbar = ["django-q-rollbar"]
 sentry = ["django-q-sentry"]
