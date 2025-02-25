@@ -2,6 +2,8 @@ This project was forked to include
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - (backported): ability to set process title using `setproctitle` utility
+- (fix): don't render entire cluster uncapable of processing tasks if one of the scheduled tasks contain malformed Arguments field
+- (addon): notify (`WARN`) in logs that we failed to parse task keyword arguments thus task handler won't receive them
 
 .. image:: docs/_static/logo.png
     :align: center
