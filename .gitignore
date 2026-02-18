@@ -71,4 +71,6 @@ node_modules
 /c.cache/
 /dq
 /venv/
+/venv39/
 .local
+.docker-*.stamp
